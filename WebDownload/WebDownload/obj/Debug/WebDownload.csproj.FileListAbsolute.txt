@@ -1,0 +1,9 @@
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\bin\Debug\WebDownload.exe.config
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\bin\Debug\WebDownload.exe
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\bin\Debug\WebDownload.pdb
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\obj\Debug\WebDownload.csprojResolveAssemblyReference.cache
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\obj\Debug\WebDownload.Form1.resources
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\obj\Debug\WebDownload.Properties.Resources.resources
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\obj\Debug\WebDownload.csproj.GenerateResource.Cache
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\obj\Debug\WebDownload.exe
+c:\users\wcb\documents\visual studio 2013\Projects\WebDownload\WebDownload\obj\Debug\WebDownload.pdb

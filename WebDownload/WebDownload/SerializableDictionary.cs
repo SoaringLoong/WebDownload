@@ -36,22 +36,27 @@ namespace WebDownload
             reader.Read();
             XmlSerializer KeySerializer = new XmlSerializer(typeof(TKey));
             XmlSerializer ValueSerializer = new XmlSerializer(typeof(TValue));
-
-            while (reader.NodeType != XmlNodeType.EndElement)
+            try
             {
-                reader.ReadStartElement("SerializableDictionary");
-                reader.ReadStartElement("key");
-                TKey tk = (TKey)KeySerializer.Deserialize(reader);
+                while (reader.NodeType != XmlNodeType.EndElement)
+                {
+                    reader.ReadStartElement("SerializableDictionary");
+                    reader.ReadStartElement("key");
+                    TKey tk = (TKey)KeySerializer.Deserialize(reader);
+                    reader.ReadEndElement();
+                    reader.ReadStartElement("value");
+                    TValue vl = (TValue)ValueSerializer.Deserialize(reader);
+                    reader.ReadEndElement();
+                    reader.ReadEndElement();
+                    this.Add(tk, vl);
+                    reader.MoveToContent();
+                }
                 reader.ReadEndElement();
-                reader.ReadStartElement("value");
-                TValue vl = (TValue)ValueSerializer.Deserialize(reader);
-                reader.ReadEndElement();
-                reader.ReadEndElement();
-                this.Add(tk, vl);
-                reader.MoveToContent();
             }
-            reader.ReadEndElement();
-
+            catch(Exception)
+            {
+                return;
+            }
         }
         public XmlSchema GetSchema()
         {

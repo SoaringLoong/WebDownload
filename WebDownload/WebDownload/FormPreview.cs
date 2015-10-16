@@ -18,14 +18,21 @@ namespace WebDownload
         {
             InitializeComponent();
 
-            WebClient mywebclient = new WebClient();
-            Byte[] imgdata = mywebclient.DownloadData(url);
-            MemoryStream ms = new MemoryStream(imgdata);
-            Image img = Image.FromStream(ms);
-            this.Width = img.Width + this.Width-pictureBox1.Width;
-            this.Height = img.Height + this.Height - pictureBox1.Height;
-            pictureBox1.SizeMode = PictureBoxSizeMode.AutoSize;
-            pictureBox1.Image = img;
+            try
+            {
+                WebClient mywebclient = new WebClient();
+                Byte[] imgdata = mywebclient.DownloadData(url);
+                MemoryStream ms = new MemoryStream(imgdata);
+                Image img = Image.FromStream(ms);
+                this.Width = img.Width + this.Width - pictureBox1.Width;
+                this.Height = img.Height + this.Height - pictureBox1.Height;
+                pictureBox1.SizeMode = PictureBoxSizeMode.AutoSize;
+                pictureBox1.Image = img;
+            }
+            catch(Exception)
+            {
+
+            }
         }
     }
 }

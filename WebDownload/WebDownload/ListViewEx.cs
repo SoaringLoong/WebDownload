@@ -148,6 +148,11 @@ namespace WebDownload
                 setGrpState(lvg, state);
         }
 
+        public void SetGroupState(ListViewGroupState state,ListViewGroup lvg)
+        {
+            setGrpState(lvg, state);
+        }
+
         public void SetGroupFooter(ListViewGroup lvg, string footerText)
         {
             setGrpFooter(lvg, footerText);

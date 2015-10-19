@@ -204,12 +204,12 @@ namespace WebDownload
                         bool bParserIMG = false;
                         if (-1 != item.IndexOf("<img"))
                         {
-                            splitstring = " src=";
+                            splitstring = "src=";
                             bParserIMG = true;
                         }
                         else if (-1 != item.IndexOf("<a"))
                         {
-                            splitstring = " href=";
+                            splitstring = "href=";
                             bParserIMG = false;
                         }
                         else if (-1 != item.IndexOf("<title"))
@@ -227,30 +227,38 @@ namespace WebDownload
                         }
 
 
-                        // parser the image url
+                        // parser the url
                         
-                        start = item.IndexOf(splitstring);
-                        if (-1 == start)
+                        
+                       if ( -1 == item.IndexOf(splitstring))
                             continue;
 
-                        char tag = item[start + splitstring.Length];
                         string url = "";
+
+                        string[] resu = item.Split(' ');
+                        foreach( var subitem in resu)
+                        {
+                            if( -1 != subitem.IndexOf(splitstring))
+                            {
+                                url = subitem.Substring(subitem.IndexOf("=") + 1);
+                                break;
+                            }
+                        }
+
+                        char tag = url[0];
+                        
                         
                         switch (tag)
                         {
                             case '\"':
-                                start = item.IndexOf("\"", start);
-                                end = item.IndexOf("\"", start + 1);
-                                url = item.Substring(start + 1, end - start - 1);
+                                start = url.IndexOf("\"", 0);
+                                end = url.IndexOf("\"", start + 1);
+                                url = url.Substring(start + 1, end - start - 1);
                                 break;
                             case '\'':
-                                start = item.IndexOf("\'", start);
-                                end = item.IndexOf("\'", start + 1);
-                                url = item.Substring(start + 1, end - start - 1);
-                                break;
-                            default:
-                                start += splitstring.Length;
-                                end = item.IndexOf(">");
+                                start = url.IndexOf("\'", 0);
+                                end = url.IndexOf("\'", start + 1);
+                                url = url.Substring(start + 1, end - start - 1);
                                 break;
                         }
 
@@ -271,10 +279,6 @@ namespace WebDownload
                         else if( -1 == url.IndexOf("http") )
                         {
                             url = workurl.Substring(0, workurl.LastIndexOf("/")+1) + url;
-                        }
-                        else
-                        {
-                            url = item.Substring(start + 1, end - start - 1);
                         }
 
                         if (!bParserIMG && url.IndexOf(baseurl) == -1 && url.IndexOf(orgbaseurl) == -1 )
@@ -333,6 +337,8 @@ namespace WebDownload
                         {
                             //lock(linkList)
                             {
+                                if (-1 == url.IndexOf(config.UrlKeyWords))
+                                    continue;
                                 if (!linkList.ContainsKey(url))
                                 {
                                     linkList.Add(url, null);
@@ -444,6 +450,7 @@ namespace WebDownload
         {
             try
             {
+                log = string.Format("[{0}]:{1}", DateTime.Now.ToString(), log);
                 sw.WriteLine(log);
             }
             catch (Exception)
@@ -462,30 +469,29 @@ namespace WebDownload
             linkList.Clear();
             workList.Clear();
 
-
-            if (config.useCache)
+            if (config.useCache && Directory.Exists(config.cachepath))
             {
                 try
                 {
-                    if (File.Exists("cache\\imagelist.bin"))
-                        imageList = imageList.Deserializer("cache\\imagelist.bin");
+                    if (File.Exists(config.cachepath + "\\imagelist.bin"))
+                        imageList = imageList.Deserializer(config.cachepath + "\\imagelist.bin");
 
-                    if (File.Exists("cache\\linklist.bin"))
-                        linkList = linkList.Deserializer("cache\\linklist.bin");
+                    if (File.Exists(config.cachepath + "\\linklist.bin"))
+                        linkList = linkList.Deserializer(config.cachepath + "\\linklist.bin");
 
 
-                    if (File.Exists("cache\\downloadlist.bin"))
+                    if (File.Exists(config.cachepath + "\\downloadlist.bin"))
                     {
                         BinaryFormatter formatter = new BinaryFormatter();
-                        FileStream stream = new FileStream("cache\\downloadlist.bin", FileMode.Open, FileAccess.Read);
+                        FileStream stream = new FileStream(config.cachepath + "\\downloadlist.bin", FileMode.Open, FileAccess.Read);
                         downloadList = (Queue<string>)formatter.Deserialize(stream);
                         stream.Close();
                     }
 
-                    if (File.Exists("cache\\worklist.bin"))
+                    if (File.Exists(config.cachepath + "\\worklist.bin"))
                     {
                         BinaryFormatter formatter = new BinaryFormatter();
-                        FileStream stream = new FileStream("cache\\worklist.bin", FileMode.Open, FileAccess.Read);
+                        FileStream stream = new FileStream(config.cachepath + "\\worklist.bin", FileMode.Open, FileAccess.Read);
                         workList = (Queue<string>)formatter.Deserialize(stream);
                         stream.Close();
                     }
@@ -728,17 +734,17 @@ namespace WebDownload
 
             if( config != null && config.useCache )
             {
-                if (!Directory.Exists("cache"))
-                    Directory.CreateDirectory("cache");
+                if (!Directory.Exists(config.cachepath))
+                    Directory.CreateDirectory(config.cachepath);
 
-                imageList.Serializer("cache\\imagelist.bin");
-                linkList.Serializer("cache\\linklist.bin");
+                imageList.Serializer(config.cachepath + "\\imagelist.bin");
+                linkList.Serializer(config.cachepath + "\\linklist.bin");
 
                 BinaryFormatter formatter = new BinaryFormatter();
-                Stream stream = new FileStream("cache\\downloadlist.bin", FileMode.Create, FileAccess.Write);
+                Stream stream = new FileStream(config.cachepath + "\\downloadlist.bin", FileMode.Create, FileAccess.Write);
                 formatter.Serialize(stream, downloadList);
                 stream.Close();
-                stream = new FileStream("cache\\worklist.bin", FileMode.Create, FileAccess.Write);
+                stream = new FileStream(config.cachepath + "\\worklist.bin", FileMode.Create, FileAccess.Write);
                 formatter.Serialize(stream, workList);
                 stream.Close();
             }

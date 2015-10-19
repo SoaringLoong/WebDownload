@@ -41,6 +41,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.textBoxTitleKeyWords = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textBoxURLKeyWords = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -49,7 +53,7 @@
             this.checkBoxUseCache.AutoSize = true;
             this.checkBoxUseCache.Checked = true;
             this.checkBoxUseCache.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxUseCache.Location = new System.Drawing.Point(234, 94);
+            this.checkBoxUseCache.Location = new System.Drawing.Point(435, 36);
             this.checkBoxUseCache.Name = "checkBoxUseCache";
             this.checkBoxUseCache.Size = new System.Drawing.Size(96, 16);
             this.checkBoxUseCache.TabIndex = 19;
@@ -58,7 +62,7 @@
             // 
             // textBoxBaseUrl
             // 
-            this.textBoxBaseUrl.Location = new System.Drawing.Point(46, 48);
+            this.textBoxBaseUrl.Location = new System.Drawing.Point(66, 59);
             this.textBoxBaseUrl.Name = "textBoxBaseUrl";
             this.textBoxBaseUrl.Size = new System.Drawing.Size(325, 21);
             this.textBoxBaseUrl.TabIndex = 18;
@@ -66,7 +70,7 @@
             // 
             // textBoxStartUrl
             // 
-            this.textBoxStartUrl.Location = new System.Drawing.Point(46, 25);
+            this.textBoxStartUrl.Location = new System.Drawing.Point(66, 36);
             this.textBoxStartUrl.Name = "textBoxStartUrl";
             this.textBoxStartUrl.Size = new System.Drawing.Size(325, 21);
             this.textBoxStartUrl.TabIndex = 17;
@@ -75,7 +79,7 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(58, 184);
+            this.textBox1.Location = new System.Drawing.Point(103, 286);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(325, 21);
             this.textBox1.TabIndex = 20;
@@ -83,7 +87,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(68, 224);
+            this.label1.Location = new System.Drawing.Point(113, 322);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(53, 12);
             this.label1.TabIndex = 22;
@@ -91,7 +95,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(386, 184);
+            this.button1.Location = new System.Drawing.Point(431, 286);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 23;
@@ -108,7 +112,7 @@
             "第[^\\x00-\\xff]*页",
             "[（][0-9]*[）]",
             "[\\\\(][0-9]*[\\\\)]"});
-            this.listBox1.Location = new System.Drawing.Point(148, 224);
+            this.listBox1.Location = new System.Drawing.Point(193, 322);
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(235, 148);
             this.listBox1.TabIndex = 24;
@@ -116,7 +120,7 @@
             // button2
             // 
             this.button2.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.button2.Location = new System.Drawing.Point(123, 400);
+            this.button2.Location = new System.Drawing.Point(168, 476);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 25;
@@ -127,7 +131,7 @@
             // button3
             // 
             this.button3.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button3.Location = new System.Drawing.Point(308, 400);
+            this.button3.Location = new System.Drawing.Point(353, 476);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
             this.button3.TabIndex = 26;
@@ -156,7 +160,7 @@
             this.groupBox1.Controls.Add(this.checkBox1);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.domainUpDown1);
-            this.groupBox1.Location = new System.Drawing.Point(64, 116);
+            this.groupBox1.Location = new System.Drawing.Point(143, 222);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(300, 47);
             this.groupBox1.TabIndex = 29;
@@ -174,11 +178,47 @@
             this.checkBox1.Text = "遍历层级";
             this.checkBox1.UseVisualStyleBackColor = true;
             // 
+            // textBoxTitleKeyWords
+            // 
+            this.textBoxTitleKeyWords.Location = new System.Drawing.Point(141, 148);
+            this.textBoxTitleKeyWords.Name = "textBoxTitleKeyWords";
+            this.textBoxTitleKeyWords.Size = new System.Drawing.Size(325, 21);
+            this.textBoxTitleKeyWords.TabIndex = 30;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(64, 151);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(71, 12);
+            this.label3.TabIndex = 31;
+            this.label3.Text = "Title关键字";
+            // 
+            // textBoxURLKeyWords
+            // 
+            this.textBoxURLKeyWords.Location = new System.Drawing.Point(141, 109);
+            this.textBoxURLKeyWords.Name = "textBoxURLKeyWords";
+            this.textBoxURLKeyWords.Size = new System.Drawing.Size(325, 21);
+            this.textBoxURLKeyWords.TabIndex = 32;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(64, 112);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(59, 12);
+            this.label4.TabIndex = 33;
+            this.label4.Text = "URL关键字";
+            // 
             // Wizard
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(543, 435);
+            this.ClientSize = new System.Drawing.Size(600, 511);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.textBoxURLKeyWords);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.textBoxTitleKeyWords);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
@@ -191,6 +231,7 @@
             this.Controls.Add(this.textBoxStartUrl);
             this.Name = "Wizard";
             this.Text = "Wizard";
+            this.Load += new System.EventHandler(this.Wizard_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -213,5 +254,9 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.TextBox textBoxTitleKeyWords;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textBoxURLKeyWords;
+        private System.Windows.Forms.Label label4;
     }
 }

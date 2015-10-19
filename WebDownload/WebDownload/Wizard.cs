@@ -15,9 +15,16 @@ namespace WebDownload
     public partial class Wizard : Form
     {
         public string savepath = "";
+        public bool EditMode = false;
         public Wizard()
         {
             InitializeComponent();
+        }
+
+        public Wizard(string path)
+        {
+            EditMode = true;
+            savepath = path;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -30,8 +37,16 @@ namespace WebDownload
             {
                 conf.pageSplit.Add(item.ToString());
             }
+            conf.savepath = "";
+            conf.cachepath = "cache\\" + conf.workUrl;
+            conf.cachepath = conf.cachepath.Replace(":", "_");
+            conf.cachepath = conf.cachepath.Replace("/", "_");
+            conf.TitleKeyWords = textBoxTitleKeyWords.Text;
+            conf.UrlKeyWords = textBoxURLKeyWords.Text;
             SaveFileDialog save = new SaveFileDialog();
-            save.DefaultExt = ".conf";
+            save.DefaultExt = "conf";
+            save.Filter = "config files(*.conf)|*.confi|All files(*.*)|*.*";
+            save.AddExtension = true;
             if( DialogResult.OK == save.ShowDialog())
             {
                 savepath = save.FileName;
@@ -59,6 +74,11 @@ namespace WebDownload
             {
                 textBoxBaseUrl.Text = textBoxStartUrl.Text.Substring(0, textBoxStartUrl.Text.IndexOf('/', 8));
             }
+        }
+
+        private void Wizard_Load(object sender, EventArgs e)
+        {
+
         }
     }
 

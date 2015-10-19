@@ -44,6 +44,7 @@ namespace WebDownload
         string baseurl = "";
 
         bool AppRunning = false;
+        bool bIsStartWork = false;
 
         Point PrevLoc = new Point();
         Size PrevSize = new Size();
@@ -55,6 +56,8 @@ namespace WebDownload
         public FormMain()
         {
             InitializeComponent();
+
+            AppRunning = true;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -94,6 +97,71 @@ namespace WebDownload
             return false;
         }
 
+        /// <summary>
+        /// 获取网页源代码方法
+        /// </summary>
+        /// <param name="url">地址</param>
+        /// <param name="charSet">指定编码，如果为空，则自动判断</param>
+        /// <param name="out_str">网页源代码</param>
+        public string GetHtml(string url, string charSet)
+        {
+            string strResult = "";
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                string defenconding = "utf-8";
+                string headencoding = "";
+                
+                //声明一个HttpWebRequest请求
+                request.Timeout = 3000000;
+                //设置连接超时时间
+                request.Headers.Set("Pragma", "no-cache");
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                if( response.ContentType != null )
+                {
+                    int index = response.ContentType.IndexOf("charset=");
+                    if (-1 != index)
+                    {
+                        headencoding = response.ContentType.Substring(index + 8);
+                    }
+                }
+                
+                if (response.ToString() != "")
+                {
+                    Stream streamReceive = response.GetResponseStream();
+                    string strencoding = defenconding;
+                    // ContentType 指定的编码
+                    if (!string.IsNullOrWhiteSpace(headencoding))
+                        strencoding = headencoding;
+
+                    Encoding encoding = Encoding.GetEncoding(strencoding);
+                    StreamReader streamReader = new StreamReader(streamReceive, encoding);
+                    strResult = streamReader.ReadToEnd();
+
+                    // 如果ContentType没有指定编码,则检查Meta的编码
+                    if(string.IsNullOrWhiteSpace(headencoding))
+                    {
+                        Match charSetMatch = Regex.Match(strResult, "<meta([^>]*)charset=(\")?(.*)?\"", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                        string webCharSet = charSetMatch.Groups[3].Value.Trim().ToLower();
+                        if (!string.IsNullOrWhiteSpace(webCharSet))
+                            strencoding = webCharSet;
+
+                        if (strencoding != defenconding)
+                        {
+                            encoding = Encoding.GetEncoding(strencoding);//乱码处理
+                            streamReader = new StreamReader(streamReceive, encoding);
+                            strResult = streamReader.ReadToEnd();
+                        }
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                WriteLog("Download page fiald, the url is not find.error message is:" + exp.ToString() + ".WorkUrl is:" + url);
+            }
+            return strResult;
+        }
+
         public void ParserLoop()
         {
             WriteLog("Parser Thread is starting. id is:" + Thread.CurrentThread.ManagedThreadId);
@@ -101,6 +169,11 @@ namespace WebDownload
             {
                 if (!AppRunning)
                     break;
+
+                if(!bIsStartWork)
+                {
+                    Thread.CurrentThread.Suspend();
+                }
 
                 if (workList.Count <= 0)
                 {
@@ -138,49 +211,9 @@ namespace WebDownload
                     MyWebClient.Credentials = CredentialCache.DefaultCredentials;//获取或设置用于向Internet资源的请求进行身份验证的网络凭据
 
                     string pageHtml = "";
-                    // 尝试下载数据
-                    try
-                    {
-                        Byte[] pageData = MyWebClient.DownloadData(workurl); //从指定网站下载数据
-                        string encodeing = MyWebClient.ResponseHeaders.Get("Content-Type");
 
-                        if (-1 == encodeing.IndexOf("charset="))
-                        {
-                            string s_gbk = Encoding.Default.GetString(pageData);  //如果获取网站页面采用的是GB2312，则使用这句            
-                            string s_utf8 = Encoding.UTF8.GetString(pageData);
-
-                            if (!isLuan(s_utf8)) //判断utf8是否有乱码
-                            {
-                                pageHtml = s_utf8;
-                            }
-                            else
-                            {
-                                pageHtml = s_gbk;
-                            }
-                        }
-                        else
-                        {
-                            start = encodeing.IndexOf("charset=");
-                            encodeing = encodeing.Substring(start + 8);
-                            if (encodeing == "GBK" || encodeing == "gbk")
-                            {
-                                pageHtml = Encoding.Default.GetString(pageData);
-                            }
-                            else if (encodeing == "utf-8")
-                            {
-                                pageHtml = Encoding.UTF8.GetString(pageData);
-                            }
-                        }
-                    }
-                    catch(System.NotSupportedException e)
-                    {
-                        WriteLog("Download page fiald, no support url.error message is:" + e.ToString() + ".WorkUrl is:" + workurl);
-                    }
-                    catch(System.Net.WebException e)
-                    {
-                        WriteLog("Download page fiald, the url is not find.error message is:" + e.ToString() + ".WorkUrl is:" + workurl);
-                    }
-                    
+                  
+                    pageHtml = GetHtml(workurl,null);
 
                     pageHtml = pageHtml.Replace("<", "\n<");
                     string[] listtemp = Regex.Split(pageHtml, "\n", RegexOptions.IgnoreCase);
@@ -191,7 +224,7 @@ namespace WebDownload
                         var temp = item.Replace("\t", "");
                         temp = temp.Trim();
                         if (temp.Length > 5)
-                            list.Add(temp.ToLower());
+                            list.Add(temp);
                     }
 
                     string title = "no title";
@@ -202,20 +235,20 @@ namespace WebDownload
                         string splitstring = "";
 
                         bool bParserIMG = false;
-                        if (-1 != item.IndexOf("<img"))
+                        if (-1 != item.IndexOf("<img", StringComparison.OrdinalIgnoreCase))
                         {
                             splitstring = "src=";
                             bParserIMG = true;
                         }
-                        else if (-1 != item.IndexOf("<a"))
+                        else if (-1 != item.IndexOf("<a", StringComparison.OrdinalIgnoreCase))
                         {
                             splitstring = "href=";
                             bParserIMG = false;
                         }
-                        else if (-1 != item.IndexOf("<title"))
+                        else if (-1 != item.IndexOf("<title", StringComparison.OrdinalIgnoreCase))
                         {
-                            start = item.IndexOf("<title>") + 7;
-                            end = item.IndexOf(@"</title>");
+                            start = item.IndexOf("<title>", StringComparison.OrdinalIgnoreCase) + 7;
+                            end = item.IndexOf(@"</title>", StringComparison.OrdinalIgnoreCase);
                             if (end == -1)
                                 end = item.Length;
                             title = item.Substring(start, end - start);
@@ -228,9 +261,9 @@ namespace WebDownload
 
 
                         // parser the url
-                        
-                        
-                       if ( -1 == item.IndexOf(splitstring))
+
+
+                        if (-1 == item.IndexOf(splitstring, StringComparison.OrdinalIgnoreCase))
                             continue;
 
                         string url = "";
@@ -238,52 +271,24 @@ namespace WebDownload
                         string[] resu = item.Split(' ');
                         foreach( var subitem in resu)
                         {
-                            if( -1 != subitem.IndexOf(splitstring))
+                            if (-1 != subitem.IndexOf(splitstring, StringComparison.OrdinalIgnoreCase))
                             {
                                 url = subitem.Substring(subitem.IndexOf("=") + 1);
                                 break;
                             }
                         }
 
-                        char tag = url[0];
-                        
-                        
-                        switch (tag)
-                        {
-                            case '\"':
-                                start = url.IndexOf("\"", 0);
-                                end = url.IndexOf("\"", start + 1);
-                                url = url.Substring(start + 1, end - start - 1);
-                                break;
-                            case '\'':
-                                start = url.IndexOf("\'", 0);
-                                end = url.IndexOf("\'", start + 1);
-                                url = url.Substring(start + 1, end - start - 1);
-                                break;
-                        }
+                        url = GetRealURL(url, orgbaseurl, workurl);
 
-                        if (string.IsNullOrEmpty(url))
-                            continue;
-
-                        // 支持全局相对路径
-                        if (url[0] == '/')
-                        {
-                            url = orgbaseurl + url;
-                        }
-                        // 过滤跳转标记和javascript
-                        else if( url[0] == '#' || url.IndexOf("javascript") != -1)
-                        {
-                            continue;
-                        }
-                        // 没有http认为是当前相对路径
-                        else if( -1 == url.IndexOf("http") )
-                        {
-                            url = workurl.Substring(0, workurl.LastIndexOf("/")+1) + url;
-                        }
-
-                        if (!bParserIMG && url.IndexOf(baseurl) == -1 && url.IndexOf(orgbaseurl) == -1 )
+                        if (!bParserIMG && url.IndexOf(baseurl, StringComparison.OrdinalIgnoreCase) == -1)//&& url.IndexOf(orgbaseurl) == -1 )
                         {
                             //WriteLog("The url is not current site:" + url);
+                            continue;
+                        }
+
+                        string workpage = config.workUrl.Substring(0, config.workUrl.LastIndexOf('.'));
+                        if (!bParserIMG && config.OnlyCurPage && url.IndexOf(workpage) == -1)
+                        {
                             continue;
                         }
 
@@ -315,7 +320,8 @@ namespace WebDownload
                                         break;
                                     }
                                 }
-
+								// 去除多页时通常使用的分隔
+                                samiltitle = samiltitle.Replace("-", "").Trim();
 
                                 // 准备信息
                                 DownloadInfo info = new DownloadInfo();
@@ -374,6 +380,12 @@ namespace WebDownload
             {
                 if (!AppRunning)
                     break;
+
+                if (!bIsStartWork)
+                {
+                    Thread.CurrentThread.Suspend();
+                }
+
                 try
                 {
                     if (workList.Count <= 0 && downloadList.Count <= 0)
@@ -414,7 +426,17 @@ namespace WebDownload
                         var savefolder = GetImageSaveFolder(downinfo.imageUrl);
                         if (!Directory.Exists(savefolder))
                             Directory.CreateDirectory(savefolder);
-                        img.Save(filepath);
+
+                        try
+                        {
+                            img.Save(filepath);
+                        }
+                        catch(Exception exp)
+                        {
+                            WriteLog("Save Image error:" + exp.Message.ToString()+"\r\nThe url is :"+downinfo.workUrl+"\r\nThe save path is:"
+                                + filepath);
+
+                        }
                     }
                 }
                 catch (Exception e)
@@ -430,7 +452,7 @@ namespace WebDownload
         {
             var downinfo = imageList[imgurl];
 
-            string filename = downinfo.title + downinfo.imageUrl.Substring(7);
+            string filename = downinfo.imageUrl.Substring(7);
             string filepath = GetImageSaveFolder(imgurl) + filename;
             filepath = filepath.Replace("/", "_");
             return filepath;
@@ -459,7 +481,7 @@ namespace WebDownload
 
         public void StartWork()
         {
-            AppRunning = true;
+            bIsStartWork = true;
 
             WriteLog("Start work");
 
@@ -541,18 +563,62 @@ namespace WebDownload
 
             foreach (var item in threadList)
             {
-                if (item.ThreadState != ThreadState.Running)
-                    item.Start();
+                switch(item.ThreadState)
+                {
+                    case ThreadState.Unstarted:
+                        item.Start();
+                        break;
+                    case ThreadState.Suspended:
+                        item.Resume();
+                        break;
+                    default:
+
+                        break;
+                }
+
             }
         }
 
         public void StopWork()
         {
-            AppRunning = false;
+            bIsStartWork = false;
             
             WriteLog("Stop work");
 
             buttonStart.Text = "Start";
+
+            bool bIsRunning = false;
+            do
+            {
+                foreach (var item in threadList)
+                {
+                    if (item.IsAlive)
+                    {
+                        bIsRunning = true;
+                        continue;
+                    }
+                }
+                bIsRunning = false;
+            } while (bIsRunning);
+
+            threadList.Clear();
+
+            if (config != null && config.useCache)
+            {
+                if (!Directory.Exists(config.cachepath))
+                    Directory.CreateDirectory(config.cachepath);
+
+                imageList.Serializer(config.cachepath + "\\imagelist.bin");
+                linkList.Serializer(config.cachepath + "\\linklist.bin");
+
+                BinaryFormatter formatter = new BinaryFormatter();
+                Stream stream = new FileStream(config.cachepath + "\\downloadlist.bin", FileMode.Create, FileAccess.Write);
+                formatter.Serialize(stream, downloadList);
+                stream.Close();
+                stream = new FileStream(config.cachepath + "\\worklist.bin", FileMode.Create, FileAccess.Write);
+                formatter.Serialize(stream, workList);
+                stream.Close();
+            }
         }
 
         private void buttonStart_Click(object sender, EventArgs e)
@@ -621,6 +687,10 @@ namespace WebDownload
 //             }
             try
             {
+
+                AppRunning = false;
+
+
                 pictureBoxPrev.Image = null;
                 labelSizeText.Text = "";
                 ShowPrevArea(true);
@@ -681,11 +751,6 @@ namespace WebDownload
             System.Diagnostics.Process.Start(e.Link.LinkData.ToString());    
         }
 
-        private void listView1_Leave(object sender, EventArgs e)
-        {
-            ShowPrevArea(false);
-        }
-
         private void FormMain_Click(object sender, EventArgs e)
         {
             ShowPrevArea(false);
@@ -732,24 +797,7 @@ namespace WebDownload
                 bIsRunning = false;
             } while (bIsRunning);
 
-            if( config != null && config.useCache )
-            {
-                if (!Directory.Exists(config.cachepath))
-                    Directory.CreateDirectory(config.cachepath);
-
-                imageList.Serializer(config.cachepath + "\\imagelist.bin");
-                linkList.Serializer(config.cachepath + "\\linklist.bin");
-
-                BinaryFormatter formatter = new BinaryFormatter();
-                Stream stream = new FileStream(config.cachepath + "\\downloadlist.bin", FileMode.Create, FileAccess.Write);
-                formatter.Serialize(stream, downloadList);
-                stream.Close();
-                stream = new FileStream(config.cachepath + "\\worklist.bin", FileMode.Create, FileAccess.Write);
-                formatter.Serialize(stream, workList);
-                stream.Close();
-            }
-            
-
+           
             sw.Close();
             fs.Close();
         }
@@ -766,6 +814,7 @@ namespace WebDownload
         private void buttonOpen_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "config files(*.conf)|*.conf|All files(*.*)|*.*";
             if( DialogResult.OK == ofd.ShowDialog())
             {
                 OpenConfig(ofd.FileName);
@@ -774,12 +823,72 @@ namespace WebDownload
 
         public void OpenConfig(string path)
         {
+            if (bIsStartWork)
+                StopWork();
+
+            linkList.Clear();
+            imageList.Clear();
+            workList.Clear();
+            downloadList.Clear();
+            listgroupmap.Clear();
+
+            listView1.Groups.Clear();
+            listView1.Items.Clear();
+
+            listView1.View = View.Details;
+
+            listView1.SetGroupState(ListViewGroupState.Collapsible);
+
             BinaryFormatter formatter = new BinaryFormatter();
             FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
             config = (DownloadConfig)formatter.Deserialize(stream);
             stream.Close();
 
             labelInfo.Text = config.workUrl;
+
+            
+        }
+
+        public string GetRealURL( string text, string baseurl, string cururl)
+        {
+            string url = text;
+            char tag = url[0];
+            int start, end;
+
+            switch (tag)
+            {
+                case '\"':
+                    start = url.IndexOf("\"", 0);
+                    end = url.IndexOf("\"", start + 1);
+                    url = url.Substring(start + 1, end - start - 1);
+                    break;
+                case '\'':
+                    start = url.IndexOf("\'", 0);
+                    end = url.IndexOf("\'", start + 1);
+                    url = url.Substring(start + 1, end - start - 1);
+                    break;
+            }
+
+            if (string.IsNullOrEmpty(url))
+                return "";
+
+            // 支持全局相对路径
+            if (url[0] == '/')
+            {
+                url = baseurl + url;
+            }
+            // 过滤跳转标记和javascript
+            else if (url[0] == '#' || url.IndexOf("javascript") != -1)
+            {
+                return "";
+            }
+            // 没有http认为是当前相对路径
+            else if (-1 == url.IndexOf("http"))
+            {
+                url = cururl.Substring(0, cururl.LastIndexOf("/") + 1) + url;
+            }
+
+            return url;
         }
     }
 

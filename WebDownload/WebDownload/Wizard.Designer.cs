@@ -45,6 +45,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.textBoxURLKeyWords = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.checkBoxOnlyCur = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -210,11 +211,24 @@
             this.label4.TabIndex = 33;
             this.label4.Text = "URL关键字";
             // 
+            // checkBoxOnlyCur
+            // 
+            this.checkBoxOnlyCur.AutoSize = true;
+            this.checkBoxOnlyCur.Checked = true;
+            this.checkBoxOnlyCur.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxOnlyCur.Location = new System.Drawing.Point(167, 188);
+            this.checkBoxOnlyCur.Name = "checkBoxOnlyCur";
+            this.checkBoxOnlyCur.Size = new System.Drawing.Size(96, 16);
+            this.checkBoxOnlyCur.TabIndex = 34;
+            this.checkBoxOnlyCur.Text = "单独网页模式";
+            this.checkBoxOnlyCur.UseVisualStyleBackColor = true;
+            // 
             // Wizard
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(600, 511);
+            this.Controls.Add(this.checkBoxOnlyCur);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.textBoxURLKeyWords);
             this.Controls.Add(this.label3);
@@ -258,5 +272,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBoxURLKeyWords;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox checkBoxOnlyCur;
     }
 }

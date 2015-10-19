@@ -43,9 +43,10 @@ namespace WebDownload
             conf.cachepath = conf.cachepath.Replace("/", "_");
             conf.TitleKeyWords = textBoxTitleKeyWords.Text;
             conf.UrlKeyWords = textBoxURLKeyWords.Text;
+            conf.OnlyCurPage = checkBoxOnlyCur.Checked;
             SaveFileDialog save = new SaveFileDialog();
             save.DefaultExt = "conf";
-            save.Filter = "config files(*.conf)|*.confi|All files(*.*)|*.*";
+            save.Filter = "config files(*.conf)|*.conf|All files(*.*)|*.*";
             save.AddExtension = true;
             if( DialogResult.OK == save.ShowDialog())
             {

@@ -45,6 +45,7 @@
             this.labelInfo = new System.Windows.Forms.Label();
             this.listView1 = new WebDownload.ListViewEx();
             this.url = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.buttonEdit = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPrev)).BeginInit();
             this.panelPrev.SuspendLayout();
             this.SuspendLayout();
@@ -171,7 +172,7 @@
             // 
             // buttonOpen
             // 
-            this.buttonOpen.Location = new System.Drawing.Point(117, 12);
+            this.buttonOpen.Location = new System.Drawing.Point(119, 12);
             this.buttonOpen.Name = "buttonOpen";
             this.buttonOpen.Size = new System.Drawing.Size(97, 23);
             this.buttonOpen.TabIndex = 19;
@@ -201,18 +202,27 @@
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.Click += new System.EventHandler(this.listView1_Click);
             this.listView1.DoubleClick += new System.EventHandler(this.listView1_DoubleClick);
-            this.listView1.Leave += new System.EventHandler(this.listView1_Leave);
             // 
             // url
             // 
             this.url.Text = "url";
             this.url.Width = 300;
             // 
+            // buttonEdit
+            // 
+            this.buttonEdit.Location = new System.Drawing.Point(220, 12);
+            this.buttonEdit.Name = "buttonEdit";
+            this.buttonEdit.Size = new System.Drawing.Size(97, 23);
+            this.buttonEdit.TabIndex = 21;
+            this.buttonEdit.Text = "Edit";
+            this.buttonEdit.UseVisualStyleBackColor = true;
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(941, 410);
+            this.Controls.Add(this.buttonEdit);
             this.Controls.Add(this.labelInfo);
             this.Controls.Add(this.buttonOpen);
             this.Controls.Add(this.buttonNew);
@@ -252,6 +262,7 @@
         private System.Windows.Forms.Button buttonNew;
         private System.Windows.Forms.Button buttonOpen;
         private System.Windows.Forms.Label labelInfo;
+        private System.Windows.Forms.Button buttonEdit;
     }
 }
 

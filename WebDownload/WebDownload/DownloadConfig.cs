@@ -17,5 +17,6 @@ namespace WebDownload
         public string cachepath;
         public string UrlKeyWords;
         public string TitleKeyWords;
+        public bool OnlyCurPage;
     }
 }

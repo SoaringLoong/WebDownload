@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.buttonStart = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.label1 = new System.Windows.Forms.Label();
@@ -43,9 +44,8 @@
             this.buttonNew = new System.Windows.Forms.Button();
             this.buttonOpen = new System.Windows.Forms.Button();
             this.labelInfo = new System.Windows.Forms.Label();
-            this.listView1 = new WebDownload.ListViewEx();
-            this.url = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.buttonEdit = new System.Windows.Forms.Button();
+            this.listView1 = new WebDownload.ListViewEx();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPrev)).BeginInit();
             this.panelPrev.SuspendLayout();
             this.SuspendLayout();
@@ -190,24 +190,6 @@
             this.labelInfo.TabIndex = 20;
             this.labelInfo.Text = "info";
             // 
-            // listView1
-            // 
-            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.url});
-            this.listView1.Location = new System.Drawing.Point(18, 41);
-            this.listView1.MultiSelect = false;
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(632, 348);
-            this.listView1.TabIndex = 6;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.Click += new System.EventHandler(this.listView1_Click);
-            this.listView1.DoubleClick += new System.EventHandler(this.listView1_DoubleClick);
-            // 
-            // url
-            // 
-            this.url.Text = "url";
-            this.url.Width = 300;
-            // 
             // buttonEdit
             // 
             this.buttonEdit.Location = new System.Drawing.Point(220, 12);
@@ -217,6 +199,22 @@
             this.buttonEdit.Text = "Edit";
             this.buttonEdit.UseVisualStyleBackColor = true;
             this.buttonEdit.Click += new System.EventHandler(this.buttonEdit_Click);
+            // 
+            // listView1
+            // 
+            this.listView1.Activation = System.Windows.Forms.ItemActivation.OneClick;
+            this.listView1.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.listView1.HoverSelection = true;
+            this.listView1.Location = new System.Drawing.Point(18, 41);
+            this.listView1.MultiSelect = false;
+            this.listView1.Name = "listView1";
+            this.listView1.ShowItemToolTips = true;
+            this.listView1.Size = new System.Drawing.Size(632, 348);
+            this.listView1.TabIndex = 6;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
+            this.listView1.Click += new System.EventHandler(this.listView1_Click);
+            this.listView1.DoubleClick += new System.EventHandler(this.listView1_DoubleClick);
             // 
             // FormMain
             // 
@@ -232,6 +230,7 @@
             this.Controls.Add(this.listView1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonStart);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormMain";
             this.Text = "WebDownload";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
@@ -250,7 +249,6 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Label label1;
         private ListViewEx listView1;
-        private System.Windows.Forms.ColumnHeader url;
         private System.Windows.Forms.PictureBox pictureBoxPrev;
         private System.Windows.Forms.LinkLabel linkLabelUrl;
         private System.Windows.Forms.Label labelSize;

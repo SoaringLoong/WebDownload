@@ -53,6 +53,8 @@ namespace WebDownload
 
         string CurrentConfigPath = "";
 
+        FormProgressBar form = new FormProgressBar();
+
         public FormMain()
         {
             InitializeComponent();
@@ -71,8 +73,7 @@ namespace WebDownload
             listView1.Groups.Clear();
             listView1.Items.Clear();
 
-            listView1.View = View.Details;
-
+            listView1.Columns.Add("Url",listView1.Width - 25);
             listView1.SetGroupState(ListViewGroupState.Collapsible);
 
             ShowPrevArea(false);
@@ -95,6 +96,61 @@ namespace WebDownload
             return false;
         }
 
+        public string GetCharSet(string url, string defCharSet = "utf-8")
+        {
+            string defenconding = defCharSet;
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+                //声明一个HttpWebRequest请求
+                request.Timeout = 3000000;
+                //设置连接超时时间
+                request.Headers.Set("Pragma", "no-cache");
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                if (response.ContentType != null)
+                {
+                    int index = response.ContentType.IndexOf("charset=");
+                    if (-1 != index)
+                    {
+                        string headencoding = response.ContentType.Substring(index + 8);
+                        if (!string.IsNullOrWhiteSpace(headencoding))
+                            return headencoding;
+                    }
+                }
+
+                if (response.ToString() != "")
+                {
+                    Stream streamReceive = response.GetResponseStream();
+                    string strencoding = defenconding;
+
+                    Encoding encoding = Encoding.GetEncoding(strencoding);
+                    StreamReader streamReader = new StreamReader(streamReceive, encoding);
+
+                    string line = streamReader.ReadLine();
+                    while( !string.IsNullOrWhiteSpace(line))
+                    {
+                        Match charSetMatch = Regex.Match(line, "<meta([^>]*)charset=(\")?(.*)?\"", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                        if (charSetMatch.Length > 0)
+                        {
+                            string webCharSet = charSetMatch.Groups[3].Value.Trim().ToLower();
+                            if (!string.IsNullOrWhiteSpace(webCharSet))
+                                return webCharSet;
+
+                            break;
+                        }
+                        // 读取下一行
+                        line = streamReader.ReadLine();
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                WriteLog("Download page fiald, the url is not find.error message is:" + exp.ToString() + ".WorkUrl is:" + url);
+            }
+            return defenconding;
+        }
+
         /// <summary>
         /// 获取网页源代码方法
         /// </summary>
@@ -107,50 +163,20 @@ namespace WebDownload
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                string defenconding = "utf-8";
-                string headencoding = "";
-                
-                //声明一个HttpWebRequest请求
+
                 request.Timeout = 3000000;
                 //设置连接超时时间
-                request.Headers.Set("Pragma", "no-cache");
+                //request.Headers.Set("Pragma", "no-cache");
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                if( response.ContentType != null )
-                {
-                    int index = response.ContentType.IndexOf("charset=");
-                    if (-1 != index)
-                    {
-                        headencoding = response.ContentType.Substring(index + 8);
-                    }
-                }
-                
+               
                 if (response.ToString() != "")
                 {
                     Stream streamReceive = response.GetResponseStream();
-                    string strencoding = defenconding;
-                    // ContentType 指定的编码
-                    if (!string.IsNullOrWhiteSpace(headencoding))
-                        strencoding = headencoding;
-
-                    Encoding encoding = Encoding.GetEncoding(strencoding);
+                   
+                    Encoding encoding = Encoding.GetEncoding(GetCharSet(url));
                     StreamReader streamReader = new StreamReader(streamReceive, encoding);
+
                     strResult = streamReader.ReadToEnd();
-
-                    // 如果ContentType没有指定编码,则检查Meta的编码
-                    if(string.IsNullOrWhiteSpace(headencoding))
-                    {
-                        Match charSetMatch = Regex.Match(strResult, "<meta([^>]*)charset=(\")?(.*)?\"", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-                        string webCharSet = charSetMatch.Groups[3].Value.Trim().ToLower();
-                        if (!string.IsNullOrWhiteSpace(webCharSet))
-                            strencoding = webCharSet;
-
-                        if (strencoding != defenconding)
-                        {
-                            encoding = Encoding.GetEncoding(strencoding);//乱码处理
-                            streamReader = new StreamReader(streamReceive, encoding);
-                            strResult = streamReader.ReadToEnd();
-                        }
-                    }
                 }
             }
             catch (Exception exp)
@@ -168,7 +194,7 @@ namespace WebDownload
                 if (!AppRunning)
                     break;
 
-                if(!bIsStartWork)
+                if (!bIsStartWork)
                 {
                     Thread.CurrentThread.Suspend();
                 }
@@ -179,7 +205,7 @@ namespace WebDownload
                     continue;
                 }
                 string workurl = "";
-                lock(workList)
+                lock (workList)
                 {
                     if (workList.Count <= 0)
                     {
@@ -188,10 +214,10 @@ namespace WebDownload
                     }
                     workurl = workList.Dequeue();
                 }
-                
+
                 // 全局相对路径,解析当前url的根路径
                 string orgbaseurl = "";
-                if( workurl.IndexOf('/', 8) == -1 )
+                if (workurl.IndexOf('/', 8) == -1)
                 {
                     orgbaseurl = workurl;
                 }
@@ -210,8 +236,8 @@ namespace WebDownload
 
                     string pageHtml = "";
 
-                  
-                    pageHtml = GetHtml(workurl,null);
+
+                    pageHtml = GetHtml(workurl, null);
 
                     pageHtml = pageHtml.Replace("<", "\n<");
                     string[] listtemp = Regex.Split(pageHtml, "\n", RegexOptions.IgnoreCase);
@@ -226,7 +252,7 @@ namespace WebDownload
                     }
 
                     string title = "no title";
-                    
+
 
                     foreach (var item in list)
                     {
@@ -267,7 +293,7 @@ namespace WebDownload
                         string url = "";
 
                         string[] resu = item.Split(' ');
-                        foreach( var subitem in resu)
+                        foreach (var subitem in resu)
                         {
                             if (-1 != subitem.IndexOf(splitstring, StringComparison.OrdinalIgnoreCase))
                             {
@@ -291,7 +317,7 @@ namespace WebDownload
                         }
 
                         // some a tag's url is a image. check it.
-                        if( bParserIMG == false )
+                        if (bParserIMG == false)
                         {
                             string temp = url.Substring(url.Length - 4).ToLower();
                             if (temp == "jpeg" || temp == ".jpg" || temp == ".png" || temp == ".bmp" || temp == ".gif")
@@ -300,25 +326,25 @@ namespace WebDownload
                                 bParserIMG = true;
                             }
                         }
-                        
 
-                        if( bParserIMG )
+
+                        if (bParserIMG)
                         {
-                            if( !imageList.ContainsKey(url))
+                            if (!imageList.ContainsKey(url))
                             {
                                 string samiltitle = title;
                                 // 处理title
-                                foreach( var split in config.pageSplit)
+                                foreach (var split in config.pageSplit)
                                 {
                                     Regex rg = new Regex(split);
                                     var res = rg.Match(title);
-                                    if( res.Value != "" )
+                                    if (res.Value != "")
                                     {
                                         samiltitle = Regex.Replace(title, split, "");
                                         break;
                                     }
                                 }
-								// 去除多页时通常使用的分隔
+                                // 去除多页时通常使用的分隔
                                 samiltitle = samiltitle.Replace("-", "").Trim();
 
                                 // 准备信息
@@ -331,30 +357,30 @@ namespace WebDownload
                                 imageList.Add(url, info);
                                 downloadList.Enqueue(url);
 
-                                lock(addToViewList)
+                                lock (addToViewList)
                                 {
                                     addToViewList.Add(url);
-                                }                              
+                                }
                             }
                         }
                         else
                         {
                             //lock(linkList)
                             {
-                                if (-1 == url.IndexOf(config.UrlKeyWords))
+                                if (config.UrlKeyWords != null && -1 == url.IndexOf(config.UrlKeyWords))
                                     continue;
                                 if (!linkList.ContainsKey(url))
                                 {
                                     linkList.Add(url, null);
-                                    lock(workList)
+                                    lock (workList)
                                     {
                                         workList.Enqueue(url);
                                     }
                                 }
                             }
-                            
+
                         }
-                        
+
                     }
                 }
                 catch (Exception e)
@@ -414,32 +440,40 @@ namespace WebDownload
                     if (File.Exists(filepath))
                         continue;
 
-                    WebClient mywebclient = new WebClient();
-                    Byte[] imgdata = mywebclient.DownloadData(downinfo.imageUrl);
-                    MemoryStream ms = new MemoryStream(imgdata);
-                    Image img = Image.FromStream(ms);
-                    downinfo.imgSize = img.Size;
-                    if (img.Width > 400 && img.Height > 400)
+                    try
                     {
-                        var savefolder = GetImageSaveFolder(downinfo.imageUrl);
-                        if (!Directory.Exists(savefolder))
-                            Directory.CreateDirectory(savefolder);
-
-                        try
+                        WebClient mywebclient = new WebClient();
+                        Byte[] imgdata = mywebclient.DownloadData(downinfo.imageUrl);
+                        MemoryStream ms = new MemoryStream(imgdata);
+                        Image img = Image.FromStream(ms);
+                        downinfo.imgSize = img.Size;
+                        if (img.Width > 400 && img.Height > 400)
                         {
-                            img.Save(filepath);
-                        }
-                        catch(Exception exp)
-                        {
-                            WriteLog("Save Image error:" + exp.Message.ToString()+"\r\nThe url is :"+downinfo.workUrl+"\r\nThe save path is:"
-                                + filepath);
+                            var savefolder = GetImageSaveFolder(downinfo.imageUrl);
+                            if (!Directory.Exists(savefolder))
+                                Directory.CreateDirectory(savefolder);
 
-                            lock(downloadList)
+                            try
                             {
-                                downloadList.Enqueue(downurl);
+                                img.Save(filepath);
+                            }
+                            catch (Exception exp)
+                            {
+                                WriteLog("Save Image error:" + exp.Message.ToString() + "\r\nThe url is :" + downinfo.workUrl + "\r\nThe save path is:"
+                                    + filepath);
+
+                                lock (downloadList)
+                                {
+                                    downloadList.Enqueue(downurl);
+                                }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        WriteLog("Download image failed:" + ex.Message.ToString() + "\r\nThe URL is :" + downurl);
+                    }
+
                 }
                 catch (Exception e)
                 {
@@ -450,7 +484,27 @@ namespace WebDownload
             WriteLog("Download Thread is end. id is:" + Thread.CurrentThread.ManagedThreadId);
         }
 
-        public string GetImageSavePath( string imgurl )
+        public string GetImageTempPath(string imgurl)
+        {
+            var downinfo = imageList[imgurl];
+
+            string filename = downinfo.imageUrl.Substring(7);
+            string filepath = GetImageTempFolder(imgurl) + filename;
+            filepath = filepath.Replace("/", "_");
+            return filepath;
+        }
+
+        public string GetImageTempFolder(string imgurl)
+        {
+            var downinfo = imageList[imgurl];
+
+            string savepath = Path.GetTempPath() + "\\SLOONG.COM\\WebDownload\\Temp\\Preview\\" + downinfo.baseUrl.Substring(7) + "\\" + downinfo.samilTitle + "\\";
+            string filename = downinfo.imageUrl.Substring(7);
+            savepath = savepath.Replace("/", "_");
+            return savepath;
+        }
+
+        public string GetImageSavePath(string imgurl)
         {
             var downinfo = imageList[imgurl];
 
@@ -460,7 +514,7 @@ namespace WebDownload
             return filepath;
         }
 
-        public string GetImageSaveFolder( string imgurl )
+        public string GetImageSaveFolder(string imgurl)
         {
             var downinfo = imageList[imgurl];
 
@@ -474,7 +528,7 @@ namespace WebDownload
         {
             try
             {
-                using( FileStream fs = new FileStream("D:\\WebDownload.log", FileMode.Append))
+                using (FileStream fs = new FileStream("D:\\WebDownload.log", FileMode.Append))
                 {
                     StreamWriter sw = new StreamWriter(fs, Encoding.Default);
                     log = string.Format("[{0}]:{1}", DateTime.Now.ToString(), log);
@@ -571,7 +625,7 @@ namespace WebDownload
 
             foreach (var item in threadList)
             {
-                switch(item.ThreadState)
+                switch (item.ThreadState)
                 {
                     case ThreadState.Unstarted:
                         item.Start();
@@ -590,7 +644,7 @@ namespace WebDownload
         public void StopWork()
         {
             bIsStartWork = false;
-            
+
             WriteLog("Stop work");
 
             buttonStart.Text = "Start";
@@ -674,19 +728,40 @@ namespace WebDownload
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 WriteLog("in TimeLoop happend error:" + ex.ToString());
             }
+        }
+
+        public void RunFuncBackground(DoWorkEventHandler workfunc, object argument)
+        {
+
+            BackgroundWorker work = new BackgroundWorker();
+            work.DoWork += new DoWorkEventHandler(workfunc);
+            work.ProgressChanged += new ProgressChangedEventHandler(work_ProgressChanged);
+            work.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
+            work.WorkerReportsProgress = true;
+            work.RunWorkerAsync(argument);
+            form.Location = new Point(listView1.Location.X + listView1.Size.Width / 2, listView1.Location.Y + listView1.Size.Height / 2);
+            form.ShowDialog();
+        }
+
+        void work_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            form.ProgressValue = e.ProgressPercentage;
+        }
+
+        void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            form.Close();
         }
 
         private void listView1_Click(object sender, EventArgs e)
         {
             try
             {
-
                 AppRunning = false;
-
 
                 pictureBoxPrev.Image = null;
                 labelSizeText.Text = "";
@@ -706,23 +781,25 @@ namespace WebDownload
                 }
                 else
                 {
-                    pictureBoxPrev.Load(info.imageUrl);
+                    if (!Directory.Exists(GetImageTempFolder(info.imageUrl)))
+                        Directory.CreateDirectory(GetImageTempFolder(info.imageUrl));
+
+                    RunFuncBackground(DownloadFile, new string[] { info.imageUrl, GetImageTempPath(info.imageUrl) });
+                    pictureBoxPrev.Load("Cache\\Cache.jpg");
                     buttonSave.Show();
                 }
-            Retry:
                 if (info.imgSize.Width == 0 || info.imgSize.Height == 0)
                 {
                     info.imgSize = pictureBoxPrev.Image.Size;
-                    goto Retry;
                 }
                 labelSizeText.Text = info.imgSize.ToString();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 WriteLog("error in listview click, error message:" + ex.ToString());
             }
 
-            
+
         }
 
         private void listView1_DoubleClick(object sender, EventArgs e)
@@ -740,12 +817,12 @@ namespace WebDownload
 
         private void linkLabelUrl_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start(e.Link.LinkData.ToString());    
+            System.Diagnostics.Process.Start(e.Link.LinkData.ToString());
         }
 
         private void linkLabellocalUrl_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start(e.Link.LinkData.ToString());    
+            System.Diagnostics.Process.Start(e.Link.LinkData.ToString());
         }
 
         private void FormMain_Click(object sender, EventArgs e)
@@ -753,9 +830,9 @@ namespace WebDownload
             ShowPrevArea(false);
         }
 
-        public void ShowPrevArea(bool bShow = false )
+        public void ShowPrevArea(bool bShow = false)
         {
-            if( bShow)
+            if (bShow)
             {
                 if (panelPrev.Visible)
                     return;
@@ -798,7 +875,7 @@ namespace WebDownload
         private void buttonNew_Click(object sender, EventArgs e)
         {
             Wizard wiz = new Wizard();
-            if( DialogResult.OK == wiz.ShowDialog())
+            if (DialogResult.OK == wiz.ShowDialog())
             {
                 OpenConfig(wiz.savepath);
             }
@@ -808,7 +885,7 @@ namespace WebDownload
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "config files(*.conf)|*.conf|All files(*.*)|*.*";
-            if( DialogResult.OK == ofd.ShowDialog())
+            if (DialogResult.OK == ofd.ShowDialog())
             {
                 OpenConfig(ofd.FileName);
             }
@@ -845,7 +922,7 @@ namespace WebDownload
             this.Text = fi.Name + " - WebDownload";
         }
 
-        public string GetRealURL( string text, string baseurl, string cururl)
+        public string GetRealURL(string text, string baseurl, string cururl)
         {
             string url = text;
             char tag = url[0];
@@ -887,14 +964,59 @@ namespace WebDownload
             return url;
         }
 
+        public void DownloadFile(object sender, DoWorkEventArgs e)
+        {
+            string[] args = e.Argument as string[];
+            if (args != null)
+            {
+                DownloadFile(args[0], args[1], sender as BackgroundWorker);
+            }
+        }
+
+        public void DownloadFile(string URL, string filename, BackgroundWorker worker)
+        {
+            try
+            {
+                FileInfo fi = new FileInfo(filename);
+                if (!Directory.Exists(fi.DirectoryName))
+                    Directory.CreateDirectory(fi.DirectoryName);
+
+                System.Net.HttpWebRequest Myrq = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(URL);
+                System.Net.HttpWebResponse myrp = (System.Net.HttpWebResponse)Myrq.GetResponse();
+                long totalBytes = myrp.ContentLength;
+                System.IO.Stream st = myrp.GetResponseStream();
+                System.IO.Stream so = new System.IO.FileStream(filename, System.IO.FileMode.Create);
+                long totalDownloadedByte = 0;
+                byte[] by = new byte[1024];
+                int osize = st.Read(by, 0, (int)by.Length);
+                while (osize > 0)
+                {
+                    totalDownloadedByte = osize + totalDownloadedByte;
+                    so.Write(by, 0, osize);
+                    if (worker != null)
+                    {
+                        worker.ReportProgress((int)(totalDownloadedByte / totalBytes * 100));
+                    }
+                    osize = st.Read(by, 0, (int)by.Length);
+                }
+                so.Close();
+                st.Close();
+            }
+            catch (System.Exception e)
+            {
+                MessageBox.Show("获取图片失败!\r\n错误消息:" + e.Message.ToString() + "\r\n目标地址:" + URL);
+                return;
+            }
+        }
+
         private void buttonEdit_Click(object sender, EventArgs e)
         {
-            if( string.IsNullOrWhiteSpace(CurrentConfigPath ))
+            if (string.IsNullOrWhiteSpace(CurrentConfigPath))
             {
                 buttonOpen_Click(sender, e);
             }
             Wizard wiz = new Wizard(CurrentConfigPath);
-            if( DialogResult.OK == wiz.ShowDialog())
+            if (DialogResult.OK == wiz.ShowDialog())
             {
                 OpenConfig(CurrentConfigPath);
             }

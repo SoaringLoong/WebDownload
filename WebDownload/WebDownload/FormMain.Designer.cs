@@ -216,6 +216,7 @@
             this.buttonEdit.TabIndex = 21;
             this.buttonEdit.Text = "Edit";
             this.buttonEdit.UseVisualStyleBackColor = true;
+            this.buttonEdit.Click += new System.EventHandler(this.buttonEdit_Click);
             // 
             // FormMain
             // 
@@ -232,9 +233,8 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonStart);
             this.Name = "FormMain";
-            this.Text = "Form1";
+            this.Text = "WebDownload";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormMain_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Click += new System.EventHandler(this.FormMain_Click);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxPrev)).EndInit();

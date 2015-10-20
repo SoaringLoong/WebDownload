@@ -23,11 +23,13 @@ namespace WebDownload
 
         public Wizard(string path)
         {
+            InitializeComponent();
+
             EditMode = true;
             savepath = path;
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void buttonOK_Click(object sender, EventArgs e)
         {
             DownloadConfig conf = new DownloadConfig();
             conf.workUrl = textBoxStartUrl.Text;
@@ -44,21 +46,24 @@ namespace WebDownload
             conf.TitleKeyWords = textBoxTitleKeyWords.Text;
             conf.UrlKeyWords = textBoxURLKeyWords.Text;
             conf.OnlyCurPage = checkBoxOnlyCur.Checked;
-            SaveFileDialog save = new SaveFileDialog();
-            save.DefaultExt = "conf";
-            save.Filter = "config files(*.conf)|*.conf|All files(*.*)|*.*";
-            save.AddExtension = true;
-            if( DialogResult.OK == save.ShowDialog())
+            
+            if( !EditMode )
             {
-                savepath = save.FileName;
+                SaveFileDialog save = new SaveFileDialog();
+                save.DefaultExt = "conf";
+                save.Filter = "config files(*.conf)|*.conf|All files(*.*)|*.*";
+                save.AddExtension = true;
+                if( DialogResult.OK == save.ShowDialog())
+                    savepath = save.FileName;
+            }
+
+            if( !string.IsNullOrWhiteSpace(savepath))
+            {
                 BinaryFormatter bf = new BinaryFormatter();
                 FileStream stream = new FileStream(savepath, FileMode.Create, FileAccess.Write);
                 bf.Serialize(stream, conf);
                 stream.Close();
-            }
-
-
-            
+            }            
         }
 
         private void textBoxStartUrl_TextChanged(object sender, EventArgs e)
@@ -79,7 +84,25 @@ namespace WebDownload
 
         private void Wizard_Load(object sender, EventArgs e)
         {
+            if( EditMode )
+            {
+                DownloadConfig config = null;
+                BinaryFormatter bf = new BinaryFormatter();
+                using( FileStream fs = new FileStream(savepath,FileMode.Open,FileAccess.Read) )
+                {
+                    config = (DownloadConfig)bf.Deserialize(fs);
+                    fs.Close();
+                }
+                textBoxStartUrl.Text = config.workUrl;
+                textBoxBaseUrl.Text = config.baseUrl;
+                textBoxTitleKeyWords.Text = config.TitleKeyWords;
+                textBoxURLKeyWords.Text = config.UrlKeyWords;
+                checkBoxOnlyCur.Checked = config.OnlyCurPage;
+                checkBoxUseCache.Checked = config.useCache;
+                listBox1.Items.Clear();
+                listBox1.Items.AddRange(config.pageSplit.ToArray());
 
+            }
         }
     }
 

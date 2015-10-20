@@ -36,8 +36,6 @@ namespace WebDownload
         // The thread list, the first is parser thread, other is download thread.
         List<Thread> threadList = new List<Thread>();
 
-        FileStream fs = new FileStream("D:\\WebDownload.log", FileMode.Append);
-        StreamWriter sw = null;
 
         SerializableDictionary<string, ListViewGroup> listgroupmap = new SerializableDictionary<string, ListViewGroup>();
 
@@ -53,6 +51,8 @@ namespace WebDownload
 
         DownloadConfig config = null;
 
+        string CurrentConfigPath = "";
+
         public FormMain()
         {
             InitializeComponent();
@@ -67,8 +67,6 @@ namespace WebDownload
                 comboBoxThreadNum.Items.Add(i);
 
             comboBoxThreadNum.Text = num.ToString();
-
-            sw = new StreamWriter(fs, Encoding.Default);
 
             listView1.Groups.Clear();
             listView1.Items.Clear();
@@ -436,6 +434,10 @@ namespace WebDownload
                             WriteLog("Save Image error:" + exp.Message.ToString()+"\r\nThe url is :"+downinfo.workUrl+"\r\nThe save path is:"
                                 + filepath);
 
+                            lock(downloadList)
+                            {
+                                downloadList.Enqueue(downurl);
+                            }
                         }
                     }
                 }
@@ -472,8 +474,14 @@ namespace WebDownload
         {
             try
             {
-                log = string.Format("[{0}]:{1}", DateTime.Now.ToString(), log);
-                sw.WriteLine(log);
+                using( FileStream fs = new FileStream("D:\\WebDownload.log", FileMode.Append))
+                {
+                    StreamWriter sw = new StreamWriter(fs, Encoding.Default);
+                    log = string.Format("[{0}]:{1}", DateTime.Now.ToString(), log);
+                    sw.WriteLine(log);
+                    sw.Close();
+                    fs.Close();
+                }
             }
             catch (Exception)
             { }
@@ -672,19 +680,8 @@ namespace WebDownload
             }
         }
 
-        private void FormMain_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            
-
-        }
-
         private void listView1_Click(object sender, EventArgs e)
         {
-//             int selectCount = listView1.SelectedItems.Count; //SelectedItems.Count就是：取得值，表示SelectedItems集合的物件数目。 
-//             if (selectCount > 0)//若selectCount大於0，说明用户有选中某列。
-//             {
-//                 
-//             }
             try
             {
 
@@ -796,10 +793,6 @@ namespace WebDownload
                 }
                 bIsRunning = false;
             } while (bIsRunning);
-
-           
-            sw.Close();
-            fs.Close();
         }
 
         private void buttonNew_Click(object sender, EventArgs e)
@@ -846,7 +839,10 @@ namespace WebDownload
 
             labelInfo.Text = config.workUrl;
 
-            
+            CurrentConfigPath = path;
+
+            FileInfo fi = new FileInfo(path);
+            this.Text = fi.Name + " - WebDownload";
         }
 
         public string GetRealURL( string text, string baseurl, string cururl)
@@ -889,6 +885,19 @@ namespace WebDownload
             }
 
             return url;
+        }
+
+        private void buttonEdit_Click(object sender, EventArgs e)
+        {
+            if( string.IsNullOrWhiteSpace(CurrentConfigPath ))
+            {
+                buttonOpen_Click(sender, e);
+            }
+            Wizard wiz = new Wizard(CurrentConfigPath);
+            if( DialogResult.OK == wiz.ShowDialog())
+            {
+                OpenConfig(CurrentConfigPath);
+            }
         }
     }
 
